@@ -7,16 +7,20 @@ using static System.Math;
 public class PrimesList
 {
     private BitArray Primes = new BitArray(1);
-    private static int LargestPrimeToSieveIndex = (int)Sqrt(Int32.MaxValue) - 2; // Any prime larger than this is useless in sieving
+    private static int LargestPrimeToSieveIndex = (int)Sqrt(Int32.MaxValue) - 1; // Primes larger than this overflow.
 
+    // Throws an exception if LargestNum < 2
     public PrimesList(int LargestNum = 2)
     {
-        Primes[0] = true; // First prime is 2
+        if (LargestNum < 2)
+        {
+            throw new Exception("List cannot include a prime less than 2");
+        }
+        Primes[0] = true; // First prime, 2, is at index 0
         IncreaseSize(LargestNum - 2);
     }
 
     // Returns true if Num is prime
-    // Doubles the size of the list if Num is not included
     // Lookup is O(1)
     public bool Contains(int Num)
     {
@@ -29,10 +33,10 @@ public class PrimesList
         return false;
     }
 
-    // Return an Enumerator that enumerates over the primes between MinNum and MaxNum, inclusively
+    // Return an Enumerator containing primes between MinNum and MaxNum, inclusively
     public IEnumerable<int> GetPrimes(int MaxNum, int MinNum = 2)
     {
-        EnsureSize(MaxNum); // Should be IncreaseSize
+        EnsureSize(MaxNum);
         if (MinNum < 2) MinNum = 2;
         for (int Num = MinNum; Num <= MaxNum; Num++)
         {
@@ -46,20 +50,18 @@ public class PrimesList
     // Returns all known primes listed as a string
     public override string ToString()
     {
-        StringBuilder PrimesPrinted = new StringBuilder();
-        PrimesPrinted.Append("Primes: ");
-        int LastPrimeInList = -1; // Needed to fix fencepost problem with commas
+        StringBuilder PrimesToPrint = new StringBuilder("Primes: ");
+        int LastPrime = -1; // Needed to fix fencepost problem with commas
         for (int i = 0; i < Primes.Count; i++)
         {
             if (Primes[i])
             {
-                if (LastPrimeInList != -1) PrimesPrinted.Append(LastPrimeInList + ", ");
-                LastPrimeInList = i + 2;
+                if (LastPrime != -1) PrimesToPrint.Append(LastPrime + ", ");
+                LastPrime = i + 2;
             }
         }
-        PrimesPrinted.Append(LastPrimeInList);
-
-        return PrimesPrinted.ToString();
+        PrimesToPrint.Append(LastPrime);
+        return PrimesToPrint.ToString();
     }
 
     // Increases the size of the Primes list by SizeIncrease
@@ -67,17 +69,24 @@ public class PrimesList
     {
         int OldSize = Primes.Count;
         Primes.Length += SizeIncrease;
-        Primes.SetAll(true);
+        for (int i = OldSize; i < Primes.Length; i++)
+        {
+            Primes[i] = true;
+        }
 
-        int LastIndex = Min(Primes.Count - 1, LargestPrimeToSieveIndex);
-        for (int i = 0; i <= LastIndex; i++)
+        int StopSieveIndex = Min(Primes.Count, LargestPrimeToSieveIndex);
+        for (int i = 0; i < StopSieveIndex; i++)
         {
             if (Primes[i])
             {
                 int Prime = i + 2;
+
+                // Find an optimal index to start sieving again
                 int PrimeSquaredIndex = Prime * Prime - 2;
-                int NextToSieveIndex = OldSize - 1 + Prime - (OldSize + 1) % Prime; // Index of next number to sieve
+                int NextToSieveIndex = OldSize - 1 + Prime - (OldSize + 1) % Prime; // Next multiple of Prime after Prime[OldSize - 1]
                 int SieveStartIndex = Max(NextToSieveIndex, PrimeSquaredIndex);
+
+                // Start sieve
                 for (int j = SieveStartIndex; j < Primes.Count; j += Prime)
                 {
                     Primes[j] = false;
