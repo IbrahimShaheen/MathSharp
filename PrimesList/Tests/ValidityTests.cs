@@ -2,11 +2,12 @@
 using System.IO;
 using static System.Console;
 
-    // TODO: all tests should report false positives and false negatives
+// TODO: all tests should report false positives and false negatives
 class ValidityTests
 {
     static void Main()
     {
+        PrimesList Primes = new PrimesList();
         Write("Press enter to exit...");
         Read();
     }

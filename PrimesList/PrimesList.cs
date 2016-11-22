@@ -4,13 +4,17 @@ using System.Collections;
 using System.Collections.Generic;
 using static System.Math;
 
-public class DynamicPrimesList
+// TODO: check inline todos
+// TODO: combine functionality of get prime stream into getPrimesBetween and separate them into a separate class
+
+public class PrimesList
 {
     private BitArray Primes = new BitArray(1);
-    private static int LargestPrimeToSieveIndex = (int)Sqrt(Int32.MaxValue) - 1; // Primes larger than this overflow.
+    private static int LargestPrimeToSieveIndex = (int)Sqrt(Int32.MaxValue) - 1; // Primes larger than this overflow
+    private static int PrimeStreamIndex = 0;
 
     // Throws an exception if LargestNum < 2
-    public DynamicPrimesList(int LargestNum = 2)
+    public PrimesList(int LargestNum = 2)
     {
         if (LargestNum < 2)
         {
@@ -33,18 +37,42 @@ public class DynamicPrimesList
         return false;
     }
 
-    // Return an Enumerator containing primes between MinNum and MaxNum, inclusively
-    public IEnumerable<int> GetPrimes(int MaxNum, int MinNum = 2)
+    // Return an Enumerator containing primes between MinNum and MaxNum, exclusively
+    public IEnumerable<int> GetPrimesBetween(int MinNum, int MaxNum)
     {
         EnsureSize(MaxNum);
-        if (MinNum < 2) MinNum = 2;
-        for (int Num = MinNum; Num <= MaxNum; Num++)
+        if (MinNum < 2) MinNum = 1;
+        for (int Num = MinNum + 1; Num < MaxNum; Num++)
         {
             if (Primes[Num - 2])
             {
                 yield return Num;
             }
         }
+    }
+
+    // Starts a new one PrimeStream at StartNum
+    public void StartPrimeStream(int StartNum = 2)
+    {
+        PrimeStreamIndex = StartNum - 2;
+    }
+
+    // Returns the next prime according to PrimeStreamIndex
+    // Increases the size of PrimesList using EnsureSize if the next Prime is not in the current list
+    public int NextPrime()
+    {
+        do
+        {
+            PrimeStreamIndex++;
+            EnsureSize(PrimeStreamIndex + 1);
+        } while (!Primes[PrimeStreamIndex - 1]);
+        return PrimeStreamIndex + 1;
+    }
+
+    // Resets PrimeStreamIndex to 0
+    public void ResetPrimeStream()
+    {
+        PrimeStreamIndex = 0;
     }
 
     // Returns all known primes listed as a string
@@ -81,6 +109,7 @@ public class DynamicPrimesList
             {
                 int Prime = i + 2;
 
+                // TODO: optimize when to calculate p^2 and when to calculate multiples
                 // Find an optimal index to start sieving again
                 int PrimeSquaredIndex = Prime * Prime - 2;
                 int NextToSieveIndex = OldSize - 1 + Prime - (OldSize + 1) % Prime; // Next multiple of Prime after Prime[OldSize - 1]
