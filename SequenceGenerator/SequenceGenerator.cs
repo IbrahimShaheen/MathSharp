@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-class SequenceGenerator
+public class SequenceGenerator
 {
     private Func<int, int> SequenceFunction;
     private HashSet<int> SequenceCache;
