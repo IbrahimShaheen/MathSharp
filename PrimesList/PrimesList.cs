@@ -9,10 +9,12 @@ using static System.Math;
 
 public class PrimesList
 {
+    // TODO: Fields are only initialized in constructor!!!
     private BitArray Primes = new BitArray(1);
     private static int LargestPrimeToSieveIndex = (int)Sqrt(Int32.MaxValue) - 1; // Primes larger than this overflow
     private static int PrimeStreamIndex = 0;
 
+    // TODO: is this parameter even needed?
     // Throws an exception if LargestNum < 2
     public PrimesList(int LargestNum = 2)
     {
